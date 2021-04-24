@@ -14,7 +14,7 @@ class DM(object):
         self.CheckDir()
         self.Register()
         self.dict_index = 0
-        self.SetPath(r'F:\游戏脚本\大漠\resource')
+        self.SetPath(r'{}\resource'.format(os.getcwd()))
 
     def SetDict(self, index, file):
         self.dm.SetDict(index, file)
@@ -126,13 +126,13 @@ class DM(object):
     def RandomLeftClick(self, double=False):
         if double:
             self.dm.LeftDown()
-            self.RandomDelay(10, 20)
+            self.RandomDelay(5, 10)
             self.dm.LeftUp()
-            self.RandomDelay(10, 20)
+            self.RandomDelay(5, 10)
         self.dm.LeftDown()
-        self.RandomDelay(10, 20)
+        self.RandomDelay(5, 10)
         self.dm.LeftUp()
-        self.RandomDelay(10, 20)
+        self.RandomDelay(5, 10)
         return
 
     def RandomRightClick(self, double=False):
@@ -172,9 +172,11 @@ class DM(object):
             pic_index = self.dm.FindPic(x1, y1, x2, y2, pic_name, delta_color, sim, dir)
             count_num += 1
             if pic_index[0] != -1:
+                elapsed_time = round((time.time() - start_time) * 1000, 2)
                 self.LogPrint(
-                    "找图成功,第{}次, {}坐标:{},{}, 找图范围:{},{},{},{}".format(count_num, pic_name, pic_name[1], pic_name[2], x1,
-                                                                     y1, x2, y2))
+                    "找图成功,第{}次, {}坐标:{},{}, 找图范围:{},{},{},{}, 耗时:{}毫秒".format(count_num, pic_name, pic_index[1],
+                                                                              pic_index[2], x1, y1, x2, y2,
+                                                                              elapsed_time))
                 if click:
                     self.MoToClick(pic_index[1], pic_index[2])
                 break
@@ -184,16 +186,22 @@ class DM(object):
             self.RandomDelay(95, 96)
         return pic_index
 
-    def FindMultiColor(self, x1, y1, x2, y2, first_color, offset_color, sim=0.9, dir=0, click=True, find_time=1):
+    def FindMultiColor(self, x1, y1, x2, y2, color_name, first_color, offset_color, sim=0.9, dir=0, click=True,
+                       find_time=1):
         start_time = time.time()
         count_num = 0
         while True:
             colour_index = self.dm.FindMultiColor(x1, y1, x2, y2, first_color, offset_color, sim, dir)
             count_num += 1
             if colour_index[0]:
+                elapsed_time = round((time.time() - start_time) * 1000, 2)
                 self.LogPrint(
-                    "多点找色成功,第{}次, {}坐标:{},{} 找色范围:{},{},{},{}".format(count_num, first_color, colour_index[1],
-                                                                      colour_index[2], x1, y1, x2, y2))
+                    "多点找色成功,第{}次, 色名:{}, 颜色:{}, 坐标:{},{} 找色范围:{},{},{},{} 耗时:{}毫秒".format(count_num, color_name,
+                                                                                          first_color,
+                                                                                          colour_index[1],
+                                                                                          colour_index[2], x1, y1, x2,
+                                                                                          y2,
+                                                                                          elapsed_time))
                 if click:
                     self.MoToClick(colour_index[1], colour_index[2])
                 break
@@ -204,7 +212,6 @@ class DM(object):
                 self.RandomDelay(50, 51)
         return colour_index
 
-    # 未测试
     def FindStr(self, x1, y1, x2, y2, string, color_format, sim=0.9, click=True, font_dict=0, find_time=1):
         self.UseDict(font_dict)
         start_time = time.time()
@@ -213,9 +220,11 @@ class DM(object):
             font_index = self.dm.FindStr(x1, y1, x2, y2, string, color_format, sim)
             count_num += 1
             if font_index[0] != -1:
+                elapsed_time = round((time.time() - start_time) * 1000, 2)
                 self.LogPrint(
-                    "找字成功,第{}次, {}坐标:{},{} 找字范围:{},{},{},{}".format(count_num, string, font_index[1], font_index[2], x1,
-                                                                    y1, x2, y2))
+                    "找字成功,第{}次, {}坐标:{},{} 找字范围:{},{},{},{} 耗时:{}毫秒".format(count_num, string, font_index[1],
+                                                                            font_index[2], x1,
+                                                                            y1, x2, y2, elapsed_time))
                 if click:
                     self.MoToClick(font_index[1], font_index[2])
                 break
@@ -234,7 +243,8 @@ class DM(object):
             font = self.dm.Ocr(x1, y1, x2, y2, color_format, sim)
             count_num += 1
             if font:
-                self.LogPrint("识别到字:{},第{}次识别到".format(font, count_num))
+                elapsed_time = round((time.time() - start_time) * 1000, 2)
+                self.LogPrint("识别到字:{},第{}次识别到,耗时:{}毫秒".format(font, count_num, elapsed_time))
                 break
             else:
                 if time.time() - start_time >= find_time:

@@ -20,4 +20,5 @@ for i in aaa.split('\n'):
         bbb[i[0]] = i[1]
     except:
         pass
-print(bbb)
+import os
+print(os.getcwd())
