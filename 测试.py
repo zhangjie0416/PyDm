@@ -15,10 +15,23 @@ aaa = """-1 : 无法连接网络,(可能防火墙拦截,如果可以正常访问
 bbb = {}
 for i in aaa.split('\n'):
     i = i.split(' : ')
-    print(i)
     try:
         bbb[i[0]] = i[1]
     except:
         pass
-import os
-print(os.getcwd())
+
+
+def bbb(*args, **kwargs):
+    print(args)
+    print(kwargs)
+
+
+map_name = {
+    "地图名称": [1092, 0, 1265, 41, "e1ddc0-666666", {"sim": 1}]
+}
+c = {"1": 2}
+bbb(1, 2, 3, 4, **c)
+
+a = (1, 2, 3)
+if c.get("2"):
+    print(2)

@@ -6,6 +6,26 @@ import datetime
 import win32com.client
 from random import randint
 
+log_info = {
+    "Ocr": [
+        "函数:Ocr, 区域:({},{},{},{}), 颜色:{}, 相似度:{}, 字典:{}, 时间:{}s",
+        "结果:{}, 次数:{}, 耗时:{}"
+    ],
+    "FindStr": [
+        "函数:FindStr, 区域:({},{},{},{}), 找字:{}, 颜色:{}, 相似度:{}, 字典:{}, 点击:{}, 时间:{}s",
+        "结果:{}, 次数:{}, 耗时:{}"
+    ],
+    "FindMultiColor": [
+        "函数:FindMultiColor, 区域:({},{},{},{}), 色名:{}, 偏色:{}, 相似度:{}, 点击:{}, 时间:{}s",
+        "结果:{}, 次数:{}, 耗时:{}"
+    ],
+    "FindPic": [
+        "函数:FindPic, 区域:({},{},{},{}), 图片名:{}, 偏色:{}, 相似度:{}, 点击:{}, 时间:{}s",
+        "结果:{}, 次数:{}, 耗时:{}"
+    ]
+
+}
+
 
 class DM(object):
     def __init__(self, log_print=False, wirte_log=False):
@@ -165,77 +185,94 @@ class DM(object):
                 self.RandomRightClick()
         return
 
-    def FindPic(self, x1, y1, x2, y2, pic_name, delta_color, sim=0.9, dir=0, click=True, find_time=1):
-        start_time = time.time()
-        count_num = 0
+    def FindPic(self, x1, y1, x2, y2, pic_name, delta_color, sim, click, find_time):
+        self.LogPrint(log_info["FindPic"][0].format(x1, y1, x2, y2, pic_name, delta_color, sim, click, find_time))
+        start_time, count_num = time.time(), 0
         while True:
-            pic_index = self.dm.FindPic(x1, y1, x2, y2, pic_name, delta_color, sim, dir)
+            pic_index = self.dm.FindPic(x1, y1, x2, y2, pic_name, delta_color, sim, 0)
             count_num += 1
-            if pic_index[0] != -1:
-                elapsed_time = round((time.time() - start_time) * 1000, 2)
-                self.LogPrint(
-                    "找图成功,第{}次, {}坐标:{},{}, 找图范围:{},{},{},{}, 耗时:{}毫秒".format(count_num, pic_name, pic_index[1],
-                                                                              pic_index[2], x1, y1, x2, y2,
-                                                                              elapsed_time))
-                if click:
-                    self.MoToClick(pic_index[1], pic_index[2])
+            if pic_index[0] != -1 and click == 1:
+                self.MoToClick(pic_index[1], pic_index[2])
                 break
             if time.time() - start_time >= find_time:
-                self.LogPrint("找图失败:{}, 共计:{}次, 找图范围:{},{},{},{}".format(pic_name, count_num, x1, y1, x2, y2))
                 break
             self.RandomDelay(95, 96)
+        elapsed_time = round((time.time() - start_time) * 1000, 2)
+        self.LogPrint(log_info["FindPic"][1].format(pic_index, count_num, elapsed_time))
         return pic_index
 
-    def FindMultiColor(self, x1, y1, x2, y2, color_name, first_color, offset_color, sim=0.9, dir=0, click=True,
-                       find_time=1):
-        start_time = time.time()
-        count_num = 0
+    def FindPicPara(self, args):
+        x1, y1, x2, y2, pic_name, delta_color = args[0], args[1], args[2], args[3], args[4], args[5]
+        sim, click, find_time = 0.9, 1, 1
+        if len(args) == 7:
+            if args[6].get("sim"): sim = args[6]["sim"]
+            if args[6].get("click"): click = args[6]["click"]
+            if args[6].get("find_time"): find_time = args[6]["find_time"]
+        self.FindPic(x1, y1, x2, y2, pic_name, delta_color, sim, click, find_time)
+        return
+
+    def FindMultiColor(self, x1, y1, x2, y2, first_color, offset_color, sim, click, find_time):
+        self.LogPrint(
+            log_info["FindMultiColor"][0].format(x1, y1, x2, y2, first_color, offset_color, sim, click, find_time))
+        start_time, count_num = time.time(), 0
         while True:
-            colour_index = self.dm.FindMultiColor(x1, y1, x2, y2, first_color, offset_color, sim, dir)
+            colour_index = self.dm.FindMultiColor(x1, y1, x2, y2, first_color, offset_color, sim, 0)
             count_num += 1
-            if colour_index[0]:
-                elapsed_time = round((time.time() - start_time) * 1000, 2)
-                self.LogPrint(
-                    "多点找色成功,第{}次, 色名:{}, 颜色:{}, 坐标:{},{} 找色范围:{},{},{},{} 耗时:{}毫秒".format(count_num, color_name,
-                                                                                          first_color,
-                                                                                          colour_index[1],
-                                                                                          colour_index[2], x1, y1, x2,
-                                                                                          y2,
-                                                                                          elapsed_time))
-                if click:
-                    self.MoToClick(colour_index[1], colour_index[2])
+            if colour_index[0] and click == 1:
+                self.MoToClick(colour_index[1], colour_index[2])
                 break
             else:
                 if time.time() - start_time >= find_time:
-                    self.LogPrint("多点找色失败:{}, 共计:{}次 找色范围:{},{},{},{}".format(first_color, count_num, x1, y1, x2, y2))
                     break
                 self.RandomDelay(50, 51)
+        elapsed_time = round((time.time() - start_time) * 1000, 2)
+        self.LogPrint(log_info["FindMultiColor"][1].format(colour_index, count_num, elapsed_time))
         return colour_index
 
-    def FindStr(self, x1, y1, x2, y2, string, color_format, sim=0.9, click=True, font_dict=0, find_time=1):
+    def FindMultiColorPara(self, args):
+        x1, y1, x2, y2, = args[0], args[1], args[2], args[3],
+        color_name, first_color, offset_color = args[4], args[5], args[6]
+        sim, click, find_time = 0.9, 1, 1
+        if len(args) == 8:
+            if args[7].get("sim"): sim = args[7]["sim"]
+            if args[7].get("click"): click = args[7]["click"]
+            if args[7].get("find_time"): find_time = args[7]["find_time"]
+        self.FindMultiColor(x1, y1, x2, y2, first_color, offset_color, sim, click, find_time)
+        return
+
+    def FindStr(self, x1, y1, x2, y2, string, color_format, sim, font_dict, click, find_time):
+        self.LogPrint(log_info["FindStr"][0].format(x1, y1, x2, y2, string, color_format,
+                                                    sim, font_dict, click, find_time))
         self.UseDict(font_dict)
         start_time = time.time()
         count_num = 0
         while True:
             font_index = self.dm.FindStr(x1, y1, x2, y2, string, color_format, sim)
             count_num += 1
-            if font_index[0] != -1:
-                elapsed_time = round((time.time() - start_time) * 1000, 2)
-                self.LogPrint(
-                    "找字成功,第{}次, {}坐标:{},{} 找字范围:{},{},{},{} 耗时:{}毫秒".format(count_num, string, font_index[1],
-                                                                            font_index[2], x1,
-                                                                            y1, x2, y2, elapsed_time))
-                if click:
-                    self.MoToClick(font_index[1], font_index[2])
+            if font_index[0] != -1 and click == 1:
+                self.MoToClick(font_index[1], font_index[2])
                 break
             else:
                 if time.time() - start_time >= find_time:
-                    self.LogPrint("找字失败:{},共计:{}次 找字范围:{},{},{},{}".format(string, count_num, x1, y1, x2, y2))
                     break
                 self.RandomDelay(50, 51)
+        elapsed_time = round((time.time() - start_time) * 1000, 2)
+        self.LogPrint(log_info["FindStr"][1].format(font_index, count_num, elapsed_time))
         return
 
-    def Ocr(self, x1, y1, x2, y2, color_format, sim=0.9, font_dict=0, find_time=1):
+    def FindStrPara(self, args):
+        x1, y1, x2, y2, string, color_format = args[0], args[1], args[2], args[3], args[4], args[5]
+        sim, click, font_dict, find_time = 0.9, 1, 1, 1
+        if len(args) == 7:
+            if args[6].get("sim"): sim = args[6]["sim"]
+            if args[6].get("click"): click = args[6]["click"]
+            if args[6].get("font_dict"): font_dict = args[6]["font_dict"]
+            if args[6].get("find_time"): find_time = args[6]["find_time"]
+        self.FindStr(x1, y1, x2, y2, string, color_format, sim, font_dict, click, find_time)
+        return
+
+    def Ocr(self, x1, y1, x2, y2, color_format, sim, font_dict, find_time):
+        self.LogPrint(log_info["Ocr"][0].format(x1, y1, x2, y2, color_format, sim, font_dict, find_time))
         self.UseDict(font_dict)
         start_time = time.time()
         count_num = 0
@@ -243,14 +280,23 @@ class DM(object):
             font = self.dm.Ocr(x1, y1, x2, y2, color_format, sim)
             count_num += 1
             if font:
-                elapsed_time = round((time.time() - start_time) * 1000, 2)
-                self.LogPrint("识别到字:{},第{}次识别到,耗时:{}毫秒".format(font, count_num, elapsed_time))
                 break
             else:
                 if time.time() - start_time >= find_time:
-                    self.LogPrint("未识别到任何字,共计:{}次".format(count_num))
                     break
                 self.RandomDelay(50, 51)
+        elapsed_time = round((time.time() - start_time) * 1000, 2)
+        self.LogPrint(log_info["Ocr"][1].format(font, count_num, elapsed_time))
+        return
+
+    def OcrPara(self, args):
+        x1, y1, x2, y2, color_format = args[0], args[1], args[2], args[3], args[4],
+        sim, font_dict, find_time = 0.9, 1, 1
+        if len(args) == 6:
+            if args[5].get("sim"): sim = args[5]["sim"]
+            if args[5].get("font_dict"): font_dict = args[5]["font_dict"]
+            if args[5].get("find_time"): find_time = args[5]["find_time"]
+        self.Ocr(x1, y1, x2, y2, color_format, sim, font_dict, find_time)
         return
 
 
