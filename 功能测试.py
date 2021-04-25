@@ -1,5 +1,5 @@
 from PyDm import DM
-from Config import *
+from Config_test import *
 
 dm = DM(log_print=True, wirte_log=True)
 
