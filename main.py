@@ -27,9 +27,18 @@ class DM(object):
             self.dict_index = index
         return
 
+    def Capture(self, x1, y1, x2, y2, file):
+        save_path = r'{}\screen\{}'.format(os.getcwd(), file)
+        self.LogPrint(log_info["Capture"][0].format(x1, y1, x2, y2, save_path))
+        return self.dm.Capture(x1, y1, x2, y2, save_path)
+
     def CheckDir(self):
         if not os.path.exists('log'):
             os.mkdir("log")
+        if not os.path.exists('resource'):
+            os.mkdir("resource")
+        if not os.path.exists('screen'):
+            os.mkdir("screen")
 
     def LogPrint(self, info):
         if self.log_print:
@@ -139,8 +148,9 @@ class DM(object):
         while True:
             pic_index = self.dm.FindPic(x1, y1, x2, y2, pic_name, delta_color, sim, 0)
             count_num += 1
-            if pic_index[0] != -1 and click == 1:
-                self.MoToClick(pic_index[1], pic_index[2])
+            if pic_index[0] != -1:
+                if click == 1:
+                    self.MoToClick(pic_index[1], pic_index[2])
                 break
             if time.time() - start_time >= find_time:
                 break
@@ -166,8 +176,9 @@ class DM(object):
         while True:
             colour_index = self.dm.FindMultiColor(x1, y1, x2, y2, first_color, offset_color, sim, 0)
             count_num += 1
-            if colour_index[0] and click == 1:
-                self.MoToClick(colour_index[1], colour_index[2])
+            if colour_index[0]:
+                if click == 1:
+                    self.MoToClick(colour_index[1], colour_index[2])
                 break
             else:
                 if time.time() - start_time >= find_time:
@@ -192,13 +203,13 @@ class DM(object):
         self.LogPrint(log_info["FindStr"][0].format(x1, y1, x2, y2, string, color_format,
                                                     sim, font_dict, click, find_time))
         self.UseDict(font_dict)
-        start_time = time.time()
-        count_num = 0
+        start_time,count_num = time.time(),0
         while True:
             font_index = self.dm.FindStr(x1, y1, x2, y2, string, color_format, sim)
             count_num += 1
-            if font_index[0] != -1 and click == 1:
-                self.MoToClick(font_index[1], font_index[2])
+            if font_index[0] != -1:
+                if click == 1:
+                    self.MoToClick(font_index[1], font_index[2])
                 break
             else:
                 if time.time() - start_time >= find_time:
@@ -222,8 +233,7 @@ class DM(object):
     def Ocr(self, x1, y1, x2, y2, color_format, sim, font_dict, find_time):
         self.LogPrint(log_info["Ocr"][0].format(x1, y1, x2, y2, color_format, sim, font_dict, find_time))
         self.UseDict(font_dict)
-        start_time = time.time()
-        count_num = 0
+        start_time,count_num = time.time(),0
         while True:
             font = self.dm.Ocr(x1, y1, x2, y2, color_format, sim)
             count_num += 1
