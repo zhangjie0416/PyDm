@@ -3,7 +3,6 @@ import ctypes
 import win32com.client
 from comtypes.client import CreateObject
 
-
 class DM(object):
     def __init__(self):
         self.dm = None
